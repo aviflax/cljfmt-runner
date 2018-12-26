@@ -35,7 +35,11 @@
 
 (defn check-file
   "Check a single file for formatting."
-  [file]
+  [{:keys [verbose] :as opts} file]
+  (when verbose
+    ; Can be helpful if an exception is thrown while processing a file; this way
+    ; the user will have a clue as to what file might be causing the problem.
+    (println (str file)))
   (let [original (slurp file)
         formatted (cljfmt/reformat-string original)
         result {:file file
@@ -60,14 +64,18 @@
 
 (defn check-all
   "Check all files under the given directories"
-  [dirs]
-  (map check-file (discover-files dirs)))
+  [opts dirs]
+  (map (partial check-file opts)
+       (discover-files dirs)))
 
 (def cli-options
   [["-d" "--dir DIR" "Include a directory to scan. Defaults to ['src' 'test']."
     :parse-fn str
     :assoc-fn (fn [m k v] (update-in m [k] #(conj % v)))
-    :default ["src" "test"]]])
+    :default ["src" "test"]]
+   ; Can be helpful if an exception is thrown while processing a file; this way
+   ; the user will have a clue as to what file might be causing the problem.
+   ["-v" "--verbose" "Print the path of each file before checking it."]])
 
 (defn parse-args
   [args]
