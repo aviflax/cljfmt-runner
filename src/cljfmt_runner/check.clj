@@ -5,12 +5,13 @@
 
 (defn -main
   [& args]
-  (let [dirs (search-dirs (parse-args args) (config))
-        checks (check-all dirs)
+  (let [opts (parse-args args)
+        dirs (search-dirs opts (config))
+        checks (check-all opts dirs)
         failed (filter #(not (:correct? %)) checks)]
     (println (str "Checked " (count checks) " file(s)"))
     (if (< 0 (count failed))
-      (do (println (str (count failed) " file(s) were incorrectly formatted"))
+      (do (println failed) (println (str (count failed) " file(s) were incorrectly formatted"))
           (doseq [d (map :diff failed)]
             (println (diff/colorize-diff d)))
           (System/exit 1))
